@@ -1,7 +1,4 @@
-# K3S Skaffold Dev
-
-DISCORD TIPBOt ADD
-“https://discord.com/oauth2/authorize?&client_id=751169228568264774&scope=bot&permissions=8”
+# Pawcoin Wallet Raspberry Pi Notes
 
 * https://www.dinofizzotti.com/blog/2020-05-09-raspberry-pi-cluster-part-2-todo-api-running-on-kubernetes-with-k3s/
 ```bash
