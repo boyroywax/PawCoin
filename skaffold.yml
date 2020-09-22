@@ -1,0 +1,12 @@
+apiVersion: skaffold/v2beta6
+kind: Config
+build:
+  artifacts:
+  - image: boyroywax/pawcoin
+    context: docker/wallet-pawcoin/
+  # - imageName: django-boxy
+  #   workspace: django/
+deploy:
+  kubectl:
+    manifests:
+      - ./k8s-spec-dev/wallet-deployment.yaml

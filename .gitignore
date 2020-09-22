@@ -1,0 +1,3 @@
+docker/bootstrap/bootstrap.dat
+.DS_Store
+k8s-tipbot/bot/src/botconf.py
