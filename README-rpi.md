@@ -1,5 +1,8 @@
-# Pawcoin Wallet Raspberry Pi Notes
+# WORK IN PROGRESS
 
+## Pawcoin Wallet Raspberry Pi Notes
+
+## Kubernetes 
 * https://www.dinofizzotti.com/blog/2020-05-09-raspberry-pi-cluster-part-2-todo-api-running-on-kubernetes-with-k3s/
 ```bash
 wget https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
