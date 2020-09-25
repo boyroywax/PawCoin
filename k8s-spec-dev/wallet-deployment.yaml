@@ -4,14 +4,14 @@ metadata:
   name: pwc-wallet-service
 spec:
   ports:
-  - name: 8322tcp1
+  - name: port-tcp
     port: 8322
     protocol: TCP
     targetPort: 8322
     # nodePort: 30333
   selector:
     app: pwc-wallet
-  type: LoadBalancer
+  type: NodePort
 ---
 apiVersion: v1
 kind: Service
@@ -19,7 +19,7 @@ metadata:
   name: pwc-wallet-service2
 spec:
   ports:
-  - name: 9322tcp2
+  - name: rpcport-tcp
     port: 9322
     protocol: TCP
     targetPort: 9322
@@ -41,8 +41,8 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    server: 192.168.0.45 # ip addres of nfs server
-    path: "/media/hdd/nfs/" # path to directory
+    server: 192.168.1.144 # ip addres of nfs server
+    path: "/media/nfs/" # path to directory
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -75,10 +75,10 @@ spec:
         name: wallet-pawcoin
         ports:
         - containerPort: 8322
-          name: 8322tcp1
+          name: port-tcp
           protocol: TCP
         - containerPort: 9322
-          name: 9322tcp2
+          name: rpcport-tcp
           protocol: TCP
         volumeMounts:
         - mountPath: /root/.pawcoin
