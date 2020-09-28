@@ -9,6 +9,7 @@ import traceback
 import re
 import datetime
 import asyncio_redis
+import subprocess
 
 redis_url = 'pwc-redis'
 redis_port = 6379
@@ -27,44 +28,58 @@ handler.setFormatter(formatter)
 root.addHandler(handler)
 logger = root
 
-async def publish_work(message):
+async def call_wallet(command):
+        check_info = subprocess.getoutput('pawcoin-cli {}'.format(command))
+        logger.info('pawcoin-cli output {}'.format(check_info))
+        return check_info
+
+async def publish(channel, message):
     """Read events from pub-sub channel."""
 
     try:
-        connection = await asyncio_redis.Connection.create(host=redis_url, port=redis_port)
+        connection = await asyncio_redis.Connection.create(host='pwc-redis', port=6379)
         # Create subscriber.
-        logger.info('connection created {}'.format(connection))
-        logger.info('connection opened to redis from publish')
-        # Create transaction
+        logger.info('connection created to redis from publish {}'.format(connection))
+        # Create publish on the feed
         message = str(message)
-        await connection.publish('Work', message)
+        await connection.publish(channel, message)
         connection.close()
         return True
     except:
         return False
     logger.info('{}, message has been published to redis'.format(message))
 
-async def start_pubsub():
-    try: 
-        connection = await asyncio_redis.Connection.create(host=redis_url, port=redis_port)
-        logger.info('Redis Connection Succeeded')
+async def start_pubsub(sub_channel): 
+    connection = await asyncio_redis.Connection.create(host=redis_url, port=redis_port)
+    logger.info('Redis Connection Succeeded')
 
-        subscriber = await connection.start_subscribe()
-        await subscriber.subscribe([ 'Messages' ])
-        logger.info('subscribed to channel')
+    subscriber = await connection.start_subscribe()
+    await subscriber.subscribe([ sub_channel ])
+    logger.info('subscribed to channel')
 
-        # inPubSub = await connection.in_pubsub()
-        # logging.info('In the Pubsub? - {}'.format(inPubSub))
+    # inPubSub = await connection.in_pubsub()
+    # logging.info('In the Pubsub? - {}'.format(inPubSub))
 
-        while True:
-            reply = await subscriber.next_published()
-            publish_work(reply)
-            logger.info('Message received {}'.format(reply))
-        # When finished, close the connection.
-        connection.close()
-        # start_pubsub_work(reply)
-    except:
-        logger.info('Did Not Join Message Pubsub')
-    return
+    while True:
+        reply = await subscriber.next_published()
+        # await publish_work('Work', reply)
+        logger.info('Message received {}'.format(reply))
+        # work queue pending
+        logger.info(reply.value)
+        value = reply.value
+        value = str(value)
+        logger.info('Value from Pubsub - {}'.format(value))
+        command = re.sub(r'^\W*\w+\W*', '', value)
+        # command = str(value).split(' ', 1)
+        logger.info('Command going to the wallet - {}'.format(str(command)))
+        try:
+            command_output = await call_wallet(command) 
+            logger.info('SUCCESS! Command output - {}'.format(command_output))
+        except:
+            logger.info('FAILURE! Command output  - {}'.format(command_output))
+        ## work queue complete
+    # When finished, close the connection.
+    connection.close()
+    # start_pubsub_work(reply)
 
-asyncio.run(start_pubsub())
+asyncio.run(start_pubsub('Wallet'))
