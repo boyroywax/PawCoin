@@ -35,7 +35,6 @@ async def call_wallet(command):
 
 async def publish(channel, message):
     """Read events from pub-sub channel."""
-
     try:
         connection = await asyncio_redis.Connection.create(host='pwc-redis', port=6379)
         # Create subscriber.
@@ -75,6 +74,8 @@ async def start_pubsub(sub_channel):
         try:
             command_output = await call_wallet(command) 
             logger.info('SUCCESS! Command output - {}'.format(command_output))
+            await publish('Complete-Wallet', command_output)
+            logger.info('Success pubblishing the message to complete')
         except:
             logger.info('FAILURE! Command output  - {}'.format(command_output))
         ## work queue complete
