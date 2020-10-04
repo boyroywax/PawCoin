@@ -13,7 +13,7 @@ spec:
   selector:
     app: pwc
     tier: wallet
-  type: NodePort
+  type: LoadBalancer
 ---
 apiVersion: v1
 kind: Service
@@ -58,8 +58,8 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    server: 192.168.1.144 # ip addres of nfs server
-    path: "/media/nfs/" # path to directory
+    server: 192.168.0.45 # ip addres of nfs server
+    path: "/media/hdd/nfs/" # path to directory
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -109,7 +109,7 @@ spec:
         - mountPath: /root/.pawcoin
           name: pawcoin-vol1
           readOnly: false
-          subPath: pawcoin
+          subPath: pwc/wallet
       volumes:
       - name: pawcoin-vol1
         persistentVolumeClaim:

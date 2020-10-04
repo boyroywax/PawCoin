@@ -28,10 +28,27 @@ handler.setFormatter(formatter)
 root.addHandler(handler)
 logger = root
 
+async def split_input(value_from_pubsub):
+    value = str(value_from_pubsub)
+    v = value.split()
+    return v
+
 async def call_wallet(command):
         check_info = subprocess.getoutput('pawcoin-cli {}'.format(command))
         logger.info('pawcoin-cli output {}'.format(check_info))
         return check_info
+
+async def setHash(my_key, my_field, my_value) -> int:
+    # Create Redis connection
+    connection = await asyncio_redis.Connection.create(
+        host=redis_url,
+        port=redis_port)
+    logger.info('Connection Made to redis for hset')
+    # Set a hash field
+    hashResponse = await connection.hsetnx(my_key, my_field, my_value)
+    # When finished, close the connection.
+    connection.close()
+    return hashResponse
 
 async def publish(channel, message):
     """Read events from pub-sub channel."""
@@ -63,19 +80,25 @@ async def start_pubsub(sub_channel):
         reply = await subscriber.next_published()
         # await publish_work('Work', reply)
         logger.info('Message received {}'.format(reply))
+        
         # work queue pending
         logger.info(reply.value)
         value = reply.value
-        value = str(value)
+        v = str(value)
+        await setHash(value, 'message_status', 'Active')
+
         logger.info('Value from Pubsub - {}'.format(value))
-        command = re.sub(r'^\W*\w+\W*', '', value)
-        # command = str(value).split(' ', 1)
+        message_id = await split_input(v)
+        logger.info('message id from pubsub - {}'.format(message_id[0]))
+        command = message_id[2]
+        # command = re.sub(r'^\W*\w+^\W*\w+\W*', '', value)
         logger.info('Command going to the wallet - {}'.format(str(command)))
         try:
             command_output = await call_wallet(command) 
             logger.info('SUCCESS! Command output - {}'.format(command_output))
-            await publish('Complete-Wallet', command_output)
-            logger.info('Success pubblishing the message to complete')
+            output_message = str(command_output)
+            publish_output = await setHash(message_id[0], 'command_output', output_message)
+            logger.info('Success publishing the message to complete - {}'.format(publish_output))
         except:
             logger.info('FAILURE! Command output  - {}'.format(command_output))
         ## work queue complete
